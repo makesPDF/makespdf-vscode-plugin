@@ -1,0 +1,104 @@
+{
+  "name": "makespdf-vscode-plugin",
+  "displayName": "Markdown to PDF",
+  "description": "Convert Markdown files to PDF using the makesPDF service",
+  "version": "0.0.1",
+  "publisher": "makesPDF",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "pdf.convertMarkdownToPdf",
+        "title": "Convert Markdown to PDF",
+        "icon": "$(file-pdf)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "pdf.convertMarkdownToPdf",
+          "when": "resourceLangId == markdown",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "pdf.convertMarkdownToPdf",
+          "when": "resourceLangId == markdown"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Markdown to PDF",
+      "properties": {
+        "pdf.serviceUrl": {
+          "type": "string",
+          "default": "http://localhost:8788",
+          "description": "URL of the PDF service"
+        },
+        "pdf.pageSize": {
+          "type": "string",
+          "enum": [
+            "A3",
+            "A4",
+            "A5",
+            "Letter",
+            "Legal"
+          ],
+          "default": "A4",
+          "description": "Page size for generated PDFs"
+        },
+        "pdf.fontFamily": {
+          "type": "string",
+          "enum": [
+            "Inter",
+            "NotoSans"
+          ],
+          "default": "Inter",
+          "description": "Font family for generated PDFs"
+        },
+        "pdf.fontSize": {
+          "type": "number",
+          "default": 10,
+          "minimum": 6,
+          "maximum": 24,
+          "description": "Font size in points"
+        },
+        "pdf.margins": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "default": [
+            40,
+            40,
+            40,
+            40
+          ],
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "Page margins in points [top, right, bottom, left]"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap",
+    "watch": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap --watch",
+    "typecheck": "tsc --noEmit",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.7.2"
+  }
+}
