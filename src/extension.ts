@@ -31,7 +31,7 @@ async function convertMarkdownToPdf() {
   }
 
   const config = vscode.workspace.getConfiguration("pdf");
-  const serviceUrl = config.get<string>("serviceUrl", "http://localhost:8788");
+  const serviceUrl = config.get<string>("serviceUrl", "https://makespdf.com");
   const pageSize = config.get<string>("pageSize", "A4");
   const fontFamily = config.get<string>("fontFamily", "Inter");
   const fontSize = config.get<number>("fontSize", 10);

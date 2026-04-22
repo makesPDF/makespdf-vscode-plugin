@@ -40,7 +40,7 @@
       "properties": {
         "pdf.serviceUrl": {
           "type": "string",
-          "default": "http://localhost:8788",
+          "default": "https://makespdf.com",
           "description": "URL of the PDF service"
         },
         "pdf.pageSize": {
