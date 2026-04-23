@@ -107,7 +107,12 @@
     "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap",
     "watch": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap --watch=forever",
     "typecheck": "tsc --noEmit",
-    "package": "vsce package --no-dependencies"
+    "login": "vsce login Lecstor",
+    "package": "vsce package --no-dependencies",
+    "publish": "vsce publish --no-dependencies",
+    "publish:patch": "vsce publish patch --no-dependencies",
+    "publish:minor": "vsce publish minor --no-dependencies",
+    "publish:major": "vsce publish major --no-dependencies"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
