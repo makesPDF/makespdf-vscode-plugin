@@ -107,6 +107,7 @@
     "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap",
     "watch": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap --watch=forever",
     "typecheck": "tsc --noEmit",
+    "vscode:prepublish": "npm run build",
     "login": "vsce login Lecstor",
     "package": "vsce package --no-dependencies",
     "publish": "vsce publish --no-dependencies",
