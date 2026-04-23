@@ -43,6 +43,11 @@
           "default": "https://makespdf.com",
           "description": "URL of the PDF service"
         },
+        "makespdf.apiToken": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API token for the PDF service. Sent as `Authorization: Bearer <token>`. Get one from your account on [makespdf.com](https://makespdf.com)."
+        },
         "makespdf.pageSize": {
           "type": "string",
           "enum": [

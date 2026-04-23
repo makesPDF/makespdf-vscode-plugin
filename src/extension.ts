@@ -32,10 +32,25 @@ async function convertMarkdownToPdf() {
 
   const config = vscode.workspace.getConfiguration("makespdf");
   const serviceUrl = config.get<string>("serviceUrl", "https://makespdf.com");
+  const apiToken = config.get<string>("apiToken", "").trim();
   const pageSize = config.get<string>("pageSize", "A4");
   const fontFamily = config.get<string>("fontFamily", "Inter");
   const fontSize = config.get<number>("fontSize", 10);
   const margins = config.get<number[]>("margins", [40, 40, 40, 40]);
+
+  if (!apiToken) {
+    const action = await vscode.window.showErrorMessage(
+      "makesPDF API token is not configured. Set `makespdf.apiToken` in your settings.",
+      "Open Settings",
+    );
+    if (action === "Open Settings") {
+      await vscode.commands.executeCommand(
+        "workbench.action.openSettings",
+        "makespdf.apiToken",
+      );
+    }
+    return;
+  }
 
   // Derive title from filename
   const mdFilename = editor.document.uri.fsPath;
@@ -56,12 +71,21 @@ async function convertMarkdownToPdf() {
       async () => {
         const response = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiToken}`,
+          },
           body: JSON.stringify({
             markdown,
             options: { pageSize, fontFamily, fontSize, margins, title },
           }),
         });
+
+        if (response.status === 401 || response.status === 403) {
+          throw new Error(
+            "Authentication failed. Check `makespdf.apiToken` in your settings.",
+          );
+        }
 
         if (!response.ok) {
           const errorBody = await response.text();
