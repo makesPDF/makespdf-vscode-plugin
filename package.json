@@ -13,6 +13,7 @@
   },
   "homepage": "https://github.com/makesPDF/makespdf-vscode-plugin#readme",
   "license": "MIT",
+  "icon": "images/logo-icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
