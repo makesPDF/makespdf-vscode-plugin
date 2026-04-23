@@ -20,7 +20,8 @@ Converts the active Markdown file to PDF using the makesPDF.com service.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `makespdf.serviceUrl` | `http://localhost:8788` | URL of the PDF service |
+| `makespdf.serviceUrl` | `https://makespdf.com` | URL of the PDF service |
+| `makespdf.apiToken` | `""` | API token sent as `Authorization: Bearer <token>`. Get one from [your API keys page](https://makespdf.com/settings/api-keys). |
 | `makespdf.pageSize` | `A4` | A3, A4, A5, Letter, or Legal |
 | `makespdf.fontFamily` | `Inter` | Inter or NotoSans |
 | `makespdf.fontSize` | `10` | Font size in points (6–24) |
@@ -71,13 +72,9 @@ npm run typecheck  # Type check
    - Go to https://dev.azure.com → User Settings → Personal Access Tokens
    - Create a token with **Marketplace > Manage** scope
    - Set the organization to "All accessible organizations"
-3. Install the publishing tool:
+3. Log in (vsce is installed as a devDependency, so `npx` works without a global install):
    ```bash
-   npm install -g @vscode/vsce
-   ```
-4. Log in:
-   ```bash
-   vsce login Lecstor
+   npx vsce login Lecstor
    # Paste your PAT when prompted
    ```
 
@@ -88,18 +85,18 @@ npm run typecheck  # Type check
 npm run build
 
 # Package into a .vsix file (useful for testing before publishing)
-vsce package --no-dependencies
+npm run package
 
 # Publish to the marketplace
-vsce publish --no-dependencies
+npx vsce publish --no-dependencies
 ```
 
 To bump the version and publish in one step:
 
 ```bash
-vsce publish patch --no-dependencies   # 0.0.1 → 0.0.2
-vsce publish minor --no-dependencies   # 0.0.2 → 0.1.0
-vsce publish major --no-dependencies   # 0.1.0 → 1.0.0
+npx vsce publish patch --no-dependencies   # 0.0.1 → 0.0.2
+npx vsce publish minor --no-dependencies   # 0.0.2 → 0.1.0
+npx vsce publish major --no-dependencies   # 0.1.0 → 1.0.0
 ```
 
 ### Installing a .vsix locally
@@ -107,7 +104,7 @@ vsce publish major --no-dependencies   # 0.1.0 → 1.0.0
 To test a packaged extension without publishing:
 
 ```bash
-code --install-extension markdown-to-pdf-0.0.1.vsix
+code --install-extension makespdf-vscode-plugin-0.0.1.vsix
 ```
 
 Or in VS Code: Extensions sidebar > `...` menu > "Install from VSIX..."
