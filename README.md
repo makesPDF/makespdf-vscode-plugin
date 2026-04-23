@@ -72,9 +72,9 @@ npm run typecheck  # Type check
    - Go to https://dev.azure.com → User Settings → Personal Access Tokens
    - Create a token with **Marketplace > Manage** scope
    - Set the organization to "All accessible organizations"
-3. Log in (vsce is installed as a devDependency, so `npx` works without a global install):
+3. Log in (vsce is installed as a devDependency, so no global install is needed):
    ```bash
-   npx vsce login Lecstor
+   npm run login
    # Paste your PAT when prompted
    ```
 
@@ -88,15 +88,15 @@ npm run build
 npm run package
 
 # Publish to the marketplace
-npx vsce publish --no-dependencies
+npm run publish
 ```
 
 To bump the version and publish in one step:
 
 ```bash
-npx vsce publish patch --no-dependencies   # 0.0.1 → 0.0.2
-npx vsce publish minor --no-dependencies   # 0.0.2 → 0.1.0
-npx vsce publish major --no-dependencies   # 0.1.0 → 1.0.0
+npm run publish:patch   # 0.0.1 → 0.0.2
+npm run publish:minor   # 0.0.2 → 0.1.0
+npm run publish:major   # 0.1.0 → 1.0.0
 ```
 
 ### Installing a .vsix locally
