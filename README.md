@@ -1,10 +1,10 @@
 # Markdown to PDF — VS Code Extension
 
-Converts the active Markdown file to PDF using the makesPDF service.
+Converts the active Markdown file to PDF using the makesPDF.com service.
 
 ## Features
 
-- **Command palette:** "Convert Markdown to PDF"
+- **Command palette:** "makesPDF from markdown"
 - **Editor title bar:** PDF icon appears when viewing `.md` files
 - **Right-click context menu:** available on `.md` files
 - Opens the generated PDF in your system viewer (Preview.app on macOS)

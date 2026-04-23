@@ -1,7 +1,7 @@
 {
   "name": "makespdf-vscode-plugin",
   "displayName": "Markdown to PDF",
-  "description": "Convert Markdown files to PDF using the makesPDF service",
+  "description": "Convert Markdown files to PDF using the makesPDF.com service",
   "version": "0.0.1",
   "publisher": "makesPDF",
   "engines": {
@@ -16,7 +16,7 @@
     "commands": [
       {
         "command": "makespdf.convertMarkdownToPdf",
-        "title": "Convert Markdown to PDF",
+        "title": "makesPDF from markdown",
         "icon": "$(file-pdf)"
       }
     ],
@@ -36,7 +36,7 @@
       ]
     },
     "configuration": {
-      "title": "Markdown to PDF",
+      "title": "makesPDF",
       "properties": {
         "makespdf.serviceUrl": {
           "type": "string",
