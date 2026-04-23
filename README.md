@@ -1,110 +1,51 @@
-# Markdown to PDF — VS Code Extension
+# makesPDF — Markdown to PDF for VS Code
 
-Converts the active Markdown file to PDF using the makesPDF.com service.
+Turn the Markdown file you're editing into a cleanly typeset PDF with one command. Rendering runs on [makesPDF.com](https://makespdf.com) — no Chromium, no LaTeX, no local toolchain.
 
-## Links
+## Why makesPDF?
 
-- **Marketplace:** https://marketplace.visualstudio.com/items?itemName=Lecstor.makespdf-vscode-plugin
-- **Publisher hub:** https://marketplace.visualstudio.com/manage/publishers/Lecstor/extensions/makespdf-vscode-plugin/hub
-- **Repository:** https://github.com/makesPDF/makespdf-vscode-plugin
+- **Nothing to install locally.** No headless browser, no native binaries, no font wrangling. If you have the extension and an internet connection, you can generate PDFs.
+- **Consistent output everywhere.** The same Markdown produces the same PDF on macOS, Windows, Linux, or CI — bundled fonts (Inter, NotoSans) and a deterministic layout engine mean no more "works on my machine" PDFs.
+- **Real GitHub-Flavored Markdown.** Tables, task lists, fenced code blocks with syntax highlighting, nested lists — they all render the way you'd expect.
+- **Configurable page layout.** A3, A4, A5, Letter, Legal; per-side margins in points; font size from 6–24 pt.
+- **Fast.** Typical documents render in ~100 ms server-side; you get the PDF back before you've context-switched.
+- **Part of an API-first service.** The same backend that powers this extension also handles invoices, quotes, CVs, statements, and LinkedIn carousels — so if your workflow grows beyond Markdown, there's a path. See [makespdf.com/docs](https://makespdf.com/docs).
 
-## Features
+## Pricing
 
-- **Command palette:** "makesPDF from markdown"
-- **Editor title bar:** PDF icon appears when viewing `.md` files
-- **Right-click context menu:** available on `.md` files
-- Opens the generated PDF in your system viewer (Preview.app on macOS)
-- Saves the PDF alongside the source `.md` file
+[makesPDF has a generous free tier.](https://makespdf.com/pricing) Short Markdown documents are free under the current promo, and the Free plan gives you 10 credits per month (roughly 100 pages) beyond that. PDFs on Free and Hobbyist plans include a small `makespdf.com` link at the bottom of the page — paid plans remove it.
+
+## Getting started
+
+1. **Install** the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Lecstor.makespdf-vscode-plugin).
+2. **Sign up** at [makespdf.com](https://makespdf.com) and create an API key at [makespdf.com/settings/api-keys](https://makespdf.com/settings/api-keys).
+3. **Paste your key** into the `makespdf.apiToken` setting (VS Code will prompt you the first time you try to generate a PDF).
+4. **Open any `.md` file** and run **makesPDF from markdown** — from the Command Palette, the PDF icon in the editor title bar, or the right-click menu.
+
+The generated PDF is saved next to your source file and opened in your system viewer.
 
 ## Settings
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `makespdf.serviceUrl` | `https://makespdf.com` | URL of the PDF service |
-| `makespdf.apiToken` | `""` | API token sent as `Authorization: Bearer <token>`. Get one from [your API keys page](https://makespdf.com/settings/api-keys). |
-| `makespdf.pageSize` | `A4` | A3, A4, A5, Letter, or Legal |
-| `makespdf.fontFamily` | `Inter` | Inter or NotoSans |
-| `makespdf.fontSize` | `10` | Font size in points (6–24) |
-| `makespdf.margins` | `[40, 40, 40, 40]` | Page margins in points [top, right, bottom, left] |
+| `makespdf.serviceUrl` | `https://makespdf.com` | URL of the PDF service. Change this only if you're running makesPDF self-hosted. |
+| `makespdf.apiToken` | `""` | API token sent as `Authorization: Bearer <token>`. Get one at [makespdf.com/settings/api-keys](https://makespdf.com/settings/api-keys). |
+| `makespdf.pageSize` | `A4` | A3, A4, A5, Letter, or Legal. |
+| `makespdf.fontFamily` | `Inter` | Inter or NotoSans. |
+| `makespdf.fontSize` | `10` | Font size in points (6–24). |
+| `makespdf.margins` | `[40, 40, 40, 40]` | Page margins in points `[top, right, bottom, left]`. |
 
-## Development
+## Links
 
-### Prerequisites
+- **Website:** https://makespdf.com
+- **API docs:** https://makespdf.com/docs
+- **Marketplace listing:** https://marketplace.visualstudio.com/items?itemName=Lecstor.makespdf-vscode-plugin
+- **Source / issues:** https://github.com/makesPDF/makespdf-vscode-plugin
 
-The PDF service must be running locally:
+## Contributing
 
-```bash
-# From the repo root
-yarn dev
-```
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, build commands, and publishing instructions.
 
-### Running in dev mode
+## License
 
-1. Open this repo in VS Code
-2. Press `Cmd+Shift+D` to open the Run and Debug sidebar
-3. Select **"Run Extension"** from the dropdown at the top
-4. Click the green play button (or press F5)
-
-This builds the extension and opens a new VS Code window (the Extension Development Host) with the extension loaded. Open any `.md` file in that window to test.
-
-### Live reload
-
-For faster iteration, run the watch task instead of rebuilding each time:
-
-1. Run `npm run watch` in a terminal
-2. Make changes to `src/extension.ts`
-3. In the Extension Development Host window, press `Cmd+Shift+P` > "Developer: Reload Window"
-
-### Build commands
-
-```bash
-npm run build      # Bundle with esbuild
-npm run watch      # Watch mode
-npm run typecheck  # Type check
-```
-
-## Publishing
-
-### One-time setup
-
-1. Create a publisher account at https://marketplace.visualstudio.com/manage
-2. Create a Personal Access Token (PAT) in Azure DevOps:
-   - Go to https://dev.azure.com → User Settings → Personal Access Tokens
-   - Create a token with **Marketplace > Manage** scope
-   - Set the organization to "All accessible organizations"
-3. Log in (vsce is installed as a devDependency, so no global install is needed):
-   ```bash
-   npm run login
-   # Paste your PAT when prompted
-   ```
-
-### Publishing a release
-
-```bash
-# Build the extension
-npm run build
-
-# Package into a .vsix file (useful for testing before publishing)
-npm run package
-
-# Publish to the marketplace
-npm run publish
-```
-
-To bump the version and publish in one step:
-
-```bash
-npm run publish:patch   # 0.0.1 → 0.0.2
-npm run publish:minor   # 0.0.2 → 0.1.0
-npm run publish:major   # 0.1.0 → 1.0.0
-```
-
-### Installing a .vsix locally
-
-To test a packaged extension without publishing:
-
-```bash
-code --install-extension makespdf-vscode-plugin-0.0.1.vsix
-```
-
-Or in VS Code: Extensions sidebar > `...` menu > "Install from VSIX..."
+[MIT](./LICENSE)
