@@ -3,7 +3,7 @@
   "displayName": "Markdown to PDF",
   "description": "Convert Markdown files to PDF using the makesPDF.com service",
   "version": "0.0.1",
-  "publisher": "makesPDF",
+  "publisher": "Lecstor",
   "engines": {
     "vscode": "^1.85.0"
   },
