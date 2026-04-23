@@ -4,6 +4,15 @@
   "description": "Convert Markdown files to PDF using the makesPDF.com service",
   "version": "0.0.1",
   "publisher": "Lecstor",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/makesPDF/makespdf-vscode-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/makesPDF/makespdf-vscode-plugin/issues"
+  },
+  "homepage": "https://github.com/makesPDF/makespdf-vscode-plugin#readme",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
   },
