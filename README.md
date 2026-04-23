@@ -2,6 +2,12 @@
 
 Converts the active Markdown file to PDF using the makesPDF.com service.
 
+## Links
+
+- **Marketplace:** https://marketplace.visualstudio.com/items?itemName=Lecstor.makespdf-vscode-plugin
+- **Publisher hub:** https://marketplace.visualstudio.com/manage/publishers/Lecstor/extensions/makespdf-vscode-plugin/hub
+- **Repository:** https://github.com/makesPDF/makespdf-vscode-plugin
+
 ## Features
 
 - **Command palette:** "makesPDF from markdown"
