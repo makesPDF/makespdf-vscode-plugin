@@ -71,7 +71,7 @@ npm run typecheck  # Type check
    ```
 4. Log in:
    ```bash
-   vsce login makesPDF
+   vsce login Lecstor
    # Paste your PAT when prompted
    ```
 
