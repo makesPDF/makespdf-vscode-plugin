@@ -39,11 +39,15 @@ async function convertMarkdownToPdf() {
   const margins = config.get<number[]>("margins", [40, 40, 40, 40]);
 
   if (!apiToken) {
+    const apiKeysUrl = `${serviceUrl.replace(/\/+$/, "")}/settings/api-keys`;
     const action = await vscode.window.showErrorMessage(
       "makesPDF API token is not configured. Set `makespdf.apiToken` in your settings.",
+      "Get API Key",
       "Open Settings",
     );
-    if (action === "Open Settings") {
+    if (action === "Get API Key") {
+      await vscode.env.openExternal(vscode.Uri.parse(apiKeysUrl));
+    } else if (action === "Open Settings") {
       await vscode.commands.executeCommand(
         "workbench.action.openSettings",
         "makespdf.apiToken",
