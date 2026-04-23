@@ -1,15 +1,16 @@
 # makesPDF — Markdown to PDF for VS Code
 
-Turn the Markdown file you're editing into a cleanly typeset PDF with one command. Rendering runs on [makesPDF.com](https://makespdf.com) — no Chromium, no LaTeX, no local toolchain.
+Turn the Markdown file you're editing into a cleanly typeset, accessible, archive-grade PDF with one command. Rendering runs on [makesPDF.com](https://makespdf.com) — no Chromium, no LaTeX, no local toolchain.
 
 ## Why makesPDF?
 
+- **GitHub-Flavored Markdown in, styled PDF out.** Tables, fenced code blocks with syntax highlighting, task lists, nested lists, Mermaid diagrams, embedded images — all handled.
 - **Nothing to install locally.** No headless browser, no native binaries, no font wrangling. If you have the extension and an internet connection, you can generate PDFs.
-- **Consistent output everywhere.** The same Markdown produces the same PDF on macOS, Windows, Linux, or CI — bundled fonts (Inter, NotoSans) and a deterministic layout engine mean no more "works on my machine" PDFs.
-- **Real GitHub-Flavored Markdown.** Tables, task lists, fenced code blocks with syntax highlighting, nested lists — they all render the way you'd expect.
-- **Configurable page layout.** A3, A4, A5, Letter, Legal; per-side margins in points; font size from 6–24 pt.
-- **Fast.** Typical documents render in ~100 ms server-side; you get the PDF back before you've context-switched.
-- **Part of an API-first service.** The same backend that powers this extension also handles invoices, quotes, CVs, statements, and LinkedIn carousels — so if your workflow grows beyond Markdown, there's a path. See [makespdf.com/docs](https://makespdf.com/docs).
+- **Millisecond renders.** A deterministic DSL pipeline renders a typical Markdown document in ~100ms — no AI in the hot path.
+- **PDF/A-2A + PDF/UA-1 compliant.** Dual-compliant archival and accessible PDFs by default: full structure tree, embedded fonts, Unicode-correct text extraction. Safe for regulated industries, long-term storage, and screen readers.
+- **Consistent output everywhere.** Same Markdown → same PDF on macOS, Windows, Linux, or CI. Bundled fonts (Inter, NotoSans) and a deterministic layout engine mean no more "works on my machine" PDFs.
+- **Configurable page layout.** A3, A4, A5, Letter, Legal; per-side margins in points; font size 6–24pt.
+- **API-first, so it grows with you.** The same service also powers invoices, quotes, CVs, statements, and LinkedIn carousels via a REST API designed for automation and AI agents. Bring your own AI (Claude, Cursor, ChatGPT, or any MCP-capable agent) to author templates once and render them on demand. See [makespdf.com/docs](https://makespdf.com/docs).
 
 ## Pricing
 
