@@ -4,7 +4,7 @@ import { basename, dirname, join } from "path";
 
 export function activate(context: vscode.ExtensionContext) {
   const command = vscode.commands.registerCommand(
-    "pdf.convertMarkdownToPdf",
+    "makespdf.convertMarkdownToPdf",
     convertMarkdownToPdf,
   );
   context.subscriptions.push(command);
@@ -30,7 +30,7 @@ async function convertMarkdownToPdf() {
     return;
   }
 
-  const config = vscode.workspace.getConfiguration("pdf");
+  const config = vscode.workspace.getConfiguration("makespdf");
   const serviceUrl = config.get<string>("serviceUrl", "https://makespdf.com");
   const pageSize = config.get<string>("pageSize", "A4");
   const fontFamily = config.get<string>("fontFamily", "Inter");

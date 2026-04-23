@@ -15,7 +15,7 @@
   "contributes": {
     "commands": [
       {
-        "command": "pdf.convertMarkdownToPdf",
+        "command": "makespdf.convertMarkdownToPdf",
         "title": "Convert Markdown to PDF",
         "icon": "$(file-pdf)"
       }
@@ -23,14 +23,14 @@
     "menus": {
       "editor/title": [
         {
-          "command": "pdf.convertMarkdownToPdf",
+          "command": "makespdf.convertMarkdownToPdf",
           "when": "resourceLangId == markdown",
           "group": "navigation"
         }
       ],
       "editor/context": [
         {
-          "command": "pdf.convertMarkdownToPdf",
+          "command": "makespdf.convertMarkdownToPdf",
           "when": "resourceLangId == markdown"
         }
       ]
@@ -38,12 +38,12 @@
     "configuration": {
       "title": "Markdown to PDF",
       "properties": {
-        "pdf.serviceUrl": {
+        "makespdf.serviceUrl": {
           "type": "string",
           "default": "https://makespdf.com",
           "description": "URL of the PDF service"
         },
-        "pdf.pageSize": {
+        "makespdf.pageSize": {
           "type": "string",
           "enum": [
             "A3",
@@ -55,7 +55,7 @@
           "default": "A4",
           "description": "Page size for generated PDFs"
         },
-        "pdf.fontFamily": {
+        "makespdf.fontFamily": {
           "type": "string",
           "enum": [
             "Inter",
@@ -64,14 +64,14 @@
           "default": "Inter",
           "description": "Font family for generated PDFs"
         },
-        "pdf.fontSize": {
+        "makespdf.fontSize": {
           "type": "number",
           "default": 10,
           "minimum": 6,
           "maximum": 24,
           "description": "Font size in points"
         },
-        "pdf.margins": {
+        "makespdf.margins": {
           "type": "array",
           "items": {
             "type": "number"

@@ -14,11 +14,11 @@ Converts the active Markdown file to PDF using the makesPDF service.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `pdf.serviceUrl` | `http://localhost:8788` | URL of the PDF service |
-| `pdf.pageSize` | `A4` | A3, A4, A5, Letter, or Legal |
-| `pdf.fontFamily` | `Inter` | Inter or NotoSans |
-| `pdf.fontSize` | `10` | Font size in points (6–24) |
-| `pdf.margins` | `[40, 40, 40, 40]` | Page margins in points [top, right, bottom, left] |
+| `makespdf.serviceUrl` | `http://localhost:8788` | URL of the PDF service |
+| `makespdf.pageSize` | `A4` | A3, A4, A5, Letter, or Legal |
+| `makespdf.fontFamily` | `Inter` | Inter or NotoSans |
+| `makespdf.fontSize` | `10` | Font size in points (6–24) |
+| `makespdf.margins` | `[40, 40, 40, 40]` | Page margins in points [top, right, bottom, left] |
 
 ## Development
 
