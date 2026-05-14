@@ -1,8 +1,8 @@
 {
   "name": "makespdf-vscode-plugin",
   "displayName": "makesPDF — Markdown to PDF",
-  "description": "Convert Markdown files to PDF using the makesPDF.com service",
-  "version": "0.0.4",
+  "description": "Convert Markdown files to PDF using makesPDF.com. No signup required for short documents.",
+  "version": "0.0.5",
   "publisher": "Lecstor",
   "repository": {
     "type": "git",
@@ -56,7 +56,7 @@
         "makespdf.apiToken": {
           "type": "string",
           "default": "",
-          "markdownDescription": "API token for the PDF service. Sent as `Authorization: Bearer <token>`. Get one from [your API keys page on makespdf.com](https://makespdf.com/settings/api-keys)."
+          "markdownDescription": "Optional API token for the PDF service. Leave blank to render anonymously (subject to per-IP rate limits and a 20-page cap). Provide a key to lift those limits and persist your renders. Sent as `Authorization: Bearer <token>`. Get one from [your API keys page on makespdf.com](https://makespdf.com/settings/api-keys)."
         },
         "makespdf.pageSize": {
           "type": "string",

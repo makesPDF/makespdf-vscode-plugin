@@ -18,19 +18,26 @@ Turn the Markdown file you're editing into a cleanly typeset, accessible, archiv
 
 ## Getting started
 
-1. **Install** the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Lecstor.makespdf-vscode-plugin).
-2. **Sign up** at [makespdf.com](https://makespdf.com) and create an API key at [makespdf.com/settings/api-keys](https://makespdf.com/settings/api-keys).
-3. **Paste your key** into the `makespdf.apiToken` setting (VS Code will prompt you the first time you try to generate a PDF).
-4. **Open any `.md` file** and run **makesPDF from markdown** — from the Command Palette, the PDF icon in the editor title bar, or the right-click menu.
+**No setup required for short documents.**
 
-The generated PDF is saved next to your source file and opened in your system viewer.
+1. **Install** the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Lecstor.makespdf-vscode-plugin).
+2. **Open any `.md` file** and run **makesPDF from markdown** — from the Command Palette, the PDF icon in the editor title bar, or the right-click menu.
+
+That's it. The generated PDF is saved next to your source file and opened in your system viewer. Anonymous renders are rate-limited to 60/hour and 200/day per IP, with a 20-page cap per render.
+
+**For longer documents and higher limits:**
+
+1. **Sign up** at [makespdf.com](https://makespdf.com) and create an API key at [makespdf.com/settings/api-keys](https://makespdf.com/settings/api-keys).
+2. **Paste your key** into the `makespdf.apiToken` setting (Cmd/Ctrl + , → search "makespdf").
+
+With a key configured, renders go through your account: no per-IP limit, no per-render page cap (other than the 200KB Markdown input cap), and your PDFs are persisted to `makespdf.com/settings/renders` for re-download.
 
 ## Settings
 
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `makespdf.serviceUrl` | `https://makespdf.com` | URL of the PDF service. Change this only if you're running makesPDF self-hosted. |
-| `makespdf.apiToken` | `""` | API token sent as `Authorization: Bearer <token>`. Get one at [makespdf.com/settings/api-keys](https://makespdf.com/settings/api-keys). |
+| `makespdf.apiToken` | `""` | Optional. Leave blank to render anonymously (per-IP limits + 20-page cap). Paste a key to lift the limits and persist renders. Get one at [makespdf.com/settings/api-keys](https://makespdf.com/settings/api-keys). |
 | `makespdf.pageSize` | `A4` | A3, A4, A5, Letter, or Legal. |
 | `makespdf.fontFamily` | `Inter` | Inter or NotoSans. |
 | `makespdf.fontSize` | `10` | Font size in points (6–24). |
