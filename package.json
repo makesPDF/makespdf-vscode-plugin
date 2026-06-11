@@ -2,7 +2,7 @@
   "name": "makespdf-vscode-plugin",
   "displayName": "makesPDF — Markdown to PDF",
   "description": "Convert Markdown files to PDF using makesPDF.com. No signup required for short documents.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "Lecstor",
   "repository": {
     "type": "git",
