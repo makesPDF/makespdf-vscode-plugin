@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.6
+
+- **Local images now render.** Images referenced by a relative or absolute filesystem path (`![](./diagram.png)`, `<img src="logo.svg">`) are read from disk and inlined as base64 `data:` URIs before upload, so they appear in the PDF. Previously only `http(s)` images worked, because the server can't reach your filesystem. Remote URLs and existing `data:` URIs are left untouched, and image-like references inside code blocks/spans are never rewritten. If a referenced file can't be read, the reference is left as-is and a non-blocking warning lists what was skipped.
+
 ## 0.0.5
 
 - **No signup required for short documents.** The extension now renders Markdown to PDF without an API token on its first run, via the server's anonymous-render path. Anonymous renders are rate-limited per IP (60/hour, 200/day) and capped at 20 pages per render.
