@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { readFile, writeFile } from "fs/promises";
 import { basename, dirname, extname, isAbsolute, join, resolve } from "path";
 
-const VERSION = "0.0.5";
+const VERSION = "0.0.6";
 const ANON_TIP_SEEN_KEY = "makespdf.anonTipSeen";
 
 export function activate(context: vscode.ExtensionContext) {
