@@ -77,7 +77,11 @@ npm run publish:minor   # 0.0.2 → 0.1.0
 npm run publish:major   # 0.1.0 → 1.0.0
 ```
 
-Each variant runs `vsce publish <bump> --no-dependencies`, which updates `package.json`, creates a git commit and tag, and uploads the new `.vsix`.
+Each variant runs `vsce publish <bump> --no-dependencies`, which updates `package.json`, creates a git commit and tag, and uploads the new `.vsix`. The commit and tag are local — push them afterward so the repo matches the Marketplace:
+
+```bash
+git push origin main --follow-tags
+```
 
 ### Installing a .vsix locally
 
