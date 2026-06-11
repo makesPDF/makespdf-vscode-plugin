@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0
+## 0.1.1
 
 - **Local images now render.** Images referenced by a relative or absolute filesystem path — Markdown `![](./diagram.png)` or HTML image tags — are read from disk and inlined as base64 `data:` URIs before upload, so they appear in the PDF. Previously only `http(s)` images worked, because the server can't reach your filesystem. Remote URLs and existing `data:` URIs are left untouched, and image-like references inside code blocks/spans are never rewritten. If a referenced file can't be read, the reference is left as-is and a non-blocking warning lists what was skipped.
 

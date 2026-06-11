@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import { readFile, writeFile } from "fs/promises";
 import { basename, dirname, extname, isAbsolute, join, resolve } from "path";
 
-const VERSION = "0.1.0";
 const ANON_TIP_SEEN_KEY = "makespdf.anonTipSeen";
 
 export function activate(context: vscode.ExtensionContext) {
@@ -64,9 +63,12 @@ async function convertMarkdownToPdf(context: vscode.ExtensionContext) {
         // the server can take the anonymous path; sending an empty
         // `Bearer ` would otherwise be treated as a failed auth attempt
         // and return 401.
+        // Read the version from our own package.json at runtime so it tracks
+        // whatever `vsce publish` bumped — no hand-maintained constant to drift.
+        const version = context.extension.packageJSON.version as string;
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
-          "X-MakesPDF-Client": `vscode-plugin/${VERSION}`,
+          "X-MakesPDF-Client": `vscode-plugin/${version}`,
         };
         if (apiToken) {
           headers.Authorization = `Bearer ${apiToken}`;
