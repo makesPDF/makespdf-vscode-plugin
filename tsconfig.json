@@ -11,8 +11,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "rootDir": "src",
-    "outDir": "dist",
-    "sourceMap": true,
+    "noEmit": true,
     "allowImportingTsExtensions": true
   },
   "include": ["src"]

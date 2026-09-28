@@ -133,15 +133,24 @@ export type FeedbackResult =
   | { status: "rate-limited" }
   | { status: "failed"; error: string };
 
-/** POST the feedback and classify the outcome for the UI. Never throws. */
+/**
+ * POST the feedback and classify the outcome for the UI. Never throws.
+ *
+ * A configured key that the server rejects (401) is retried once without
+ * `Authorization`: the endpoint accepts anonymous feedback, and a stale key
+ * is exactly the failure "Report problem" is offered for — without the
+ * retry, the report of a bad key would itself fail on the bad key.
+ */
 export async function sendFeedback(
   args: FeedbackRequestArgs,
   fetchImpl: typeof fetch = fetch,
 ): Promise<FeedbackResult> {
-  const { url, init } = buildFeedbackRequest(args);
   let response: Response;
   try {
-    response = await fetchImpl(url, { ...init, signal: AbortSignal.timeout(15_000) });
+    response = await post(args, fetchImpl);
+    if (response.status === 401 && args.apiToken) {
+      response = await post({ ...args, apiToken: "" }, fetchImpl);
+    }
   } catch (error) {
     return { status: "failed", error: error instanceof Error ? error.message : String(error) };
   }
@@ -156,4 +165,9 @@ export async function sendFeedback(
     /* non-JSON error body — the status is all we have */
   }
   return { status: "failed", error: detail };
+}
+
+function post(args: FeedbackRequestArgs, fetchImpl: typeof fetch): Promise<Response> {
+  const { url, init } = buildFeedbackRequest(args);
+  return fetchImpl(url, { ...init, signal: AbortSignal.timeout(15_000) });
 }

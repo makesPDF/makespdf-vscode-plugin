@@ -43,7 +43,8 @@ Feedback is sent to makesPDF (`POST /api/v1/feedback` on your `makespdf.serviceU
 - the text you type (please don't paste document content into it);
 - the kind you picked: problem, idea or praise;
 - for **Report problem** only, a few facts about the failed export: the HTTP status, the server's error code if it returned one, your page size, font family and font size settings, and the size of the document in bytes;
-- the extension's name and version (`X-MakesPDF-Client`), and your API key if you have set `makespdf.apiToken`, so the feedback is linked to your account. Without a key it is sent anonymously.
+- the extension's name and version (`X-MakesPDF-Client`), and your API key if you have set `makespdf.apiToken`, so the feedback is linked to your account. Without a key, or if the server rejects your key, it is sent anonymously.
+- a salted hash of your IP address and your country, which the server records for rate limiting.
 
 Your Markdown, its file name and its path are never sent with feedback. Feedback is kept until the makesPDF team deletes it. If sending fails, the error message links to [GitHub issues](https://github.com/makesPDF/makespdf-vscode-plugin/issues) instead.
 

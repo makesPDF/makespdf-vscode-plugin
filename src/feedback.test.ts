@@ -138,3 +138,24 @@ test("sendFeedback classifies success, 429 and other failures", async () => {
     error: "fetch failed",
   });
 });
+
+test("a rejected key is retried once anonymously, so a stale key can still report", async () => {
+  const seen: (string | undefined)[] = [];
+  const fetchImpl = (async (_url: string, init: RequestInit) => {
+    const auth = (init.headers as Record<string, string>).Authorization;
+    seen.push(auth);
+    return new Response("{}", { status: auth ? 401 : 200 });
+  }) as unknown as typeof fetch;
+
+  assert.deepEqual(await sendFeedback({ ...ARGS, apiToken: "stale" }, fetchImpl), {
+    status: "sent",
+  });
+  assert.deepEqual(seen, ["Bearer stale", undefined]);
+
+  // No key configured: a 401 is not retried (there is nothing to drop).
+  const anon401 = fakeFetch(new Response('{"error":"Unauthorized"}', { status: 401 }));
+  assert.deepEqual(await sendFeedback(ARGS, anon401), {
+    status: "failed",
+    error: "Unauthorized (HTTP 401)",
+  });
+});
