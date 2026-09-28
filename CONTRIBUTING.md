@@ -38,6 +38,7 @@ For faster iteration, run the watch task instead of rebuilding manually:
 npm run build      # Bundle with esbuild
 npm run watch      # Watch mode
 npm run typecheck  # Type check (tsc --noEmit)
+npm test           # Unit tests (node --test; needs Node 22.18+ for built-in TypeScript support)
 ```
 
 ## Publishing
