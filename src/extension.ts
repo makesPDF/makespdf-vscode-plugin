@@ -1,6 +1,14 @@
 import * as vscode from "vscode";
 import { readFile, writeFile } from "fs/promises";
 import { basename, dirname, extname, isAbsolute, join, resolve } from "path";
+import {
+  buildProblemContext,
+  sendFeedback,
+  validateFeedbackMessage,
+  type FeedbackContext,
+  type FeedbackKind,
+  type RenderFailureFacts,
+} from "./feedback";
 
 const ANON_TIP_SEEN_KEY = "makespdf.anonTipSeen";
 
@@ -10,6 +18,11 @@ export function activate(context: vscode.ExtensionContext) {
     () => convertMarkdownToPdf(context),
   );
   context.subscriptions.push(command);
+  context.subscriptions.push(
+    vscode.commands.registerCommand("makespdf.sendFeedback", () =>
+      sendFeedbackCommand(context),
+    ),
+  );
 }
 
 export function deactivate() {}
@@ -47,6 +60,14 @@ async function convertMarkdownToPdf(context: vscode.ExtensionContext) {
   const url = `${serviceUrl.replace(/\/+$/, "")}/api/v1/md`;
 
   const pdfPath = join(dirname(mdFilename), `${title}.pdf`);
+  // Fingerprints for "Report problem": sizes and settings, never the text or
+  // the file name. The failure's status and code are added in the catch.
+  const failureFacts: RenderFailureFacts = {
+    pageSize,
+    fontFamily,
+    fontSize,
+    inputBytes: Buffer.byteLength(markdown),
+  };
   let savedMessage = "";
   let anonymousTip: string | null = null;
   let imageNotice: string | null = null;
@@ -106,19 +127,23 @@ async function convertMarkdownToPdf(context: vscode.ExtensionContext) {
           if (apiToken) {
             throw new AuthError(
               "Authentication failed. Check `makespdf.apiToken` in your settings.",
+              response.status,
             );
           }
           throw new AuthError(
             "This server requires an account. Create one at " +
               `${serviceUrl.replace(/\/+$/, "")}/signup and paste your API key into the ` +
               "`makespdf.apiToken` setting.",
+            response.status,
           );
         }
 
         if (response.status === 429) {
           const detail = await readErrorTip(response);
-          throw new Error(
+          throw new RenderError(
             `Rate limited. ${detail.tip ?? "Wait a few minutes and try again, or sign up for higher limits."}`,
+            response.status,
+            detail.error,
           );
         }
 
@@ -126,23 +151,27 @@ async function convertMarkdownToPdf(context: vscode.ExtensionContext) {
           const detail = await readErrorTip(response);
           // page-cap-exceeded is the only 400 with structured guidance.
           if (detail.error === "page-cap-exceeded") {
-            throw new Error(
+            throw new RenderError(
               `Document is too long for an anonymous render (${detail.actual ?? "many"} pages, ` +
                 `cap ${detail.limit ?? 20}). ${detail.tip ?? "Sign up for higher limits."}`,
+              response.status,
+              detail.error,
             );
           }
-          throw new Error(detail.error ?? "Bad request");
+          throw new RenderError(detail.error ?? "Bad request", response.status, detail.error);
         }
 
         if (!response.ok) {
           const errorBody = await response.text();
           let detail: string;
+          let code: unknown;
           try {
-            detail = JSON.parse(errorBody).error ?? errorBody;
+            code = JSON.parse(errorBody).error;
+            detail = typeof code === "string" && code ? code : errorBody;
           } catch {
             detail = errorBody;
           }
-          throw new Error(detail);
+          throw new RenderError(detail, response.status, code);
         }
 
         const buffer = Buffer.from(await response.arrayBuffer());
@@ -206,12 +235,19 @@ async function convertMarkdownToPdf(context: vscode.ExtensionContext) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : String(error);
+    if (error instanceof RenderError || error instanceof AuthError) {
+      failureFacts.httpStatus = error.status;
+    }
+    if (error instanceof RenderError) {
+      failureFacts.errorCode = typeof error.code === "string" ? error.code : undefined;
+    }
 
     if (error instanceof AuthError) {
       const action = await vscode.window.showErrorMessage(
         message,
         "Get API Key",
         "Open Settings",
+        REPORT_PROBLEM,
       );
       const apiKeysUrl = `${serviceUrl.replace(/\/+$/, "")}/settings/api-keys`;
       if (action === "Get API Key") {
@@ -221,24 +257,132 @@ async function convertMarkdownToPdf(context: vscode.ExtensionContext) {
           "workbench.action.openSettings",
           "makespdf.apiToken",
         );
+      } else if (action === REPORT_PROBLEM) {
+        await reportProblem(context, failureFacts);
       }
       return;
     }
 
-    if (message.includes("ECONNREFUSED") || message.includes("fetch failed")) {
-      vscode.window.showErrorMessage(
-        `Could not connect to PDF service at ${serviceUrl}. Is it running? (yarn dev)`,
-      );
-    } else {
-      vscode.window.showErrorMessage(`PDF conversion failed: ${message}`);
+    const shown =
+      message.includes("ECONNREFUSED") || message.includes("fetch failed")
+        ? `Could not connect to PDF service at ${serviceUrl}. Is it running? (yarn dev)`
+        : `PDF conversion failed: ${message}`;
+    const action = await vscode.window.showErrorMessage(shown, REPORT_PROBLEM);
+    if (action === REPORT_PROBLEM) {
+      await reportProblem(context, failureFacts);
+    }
+  }
+}
+
+const REPORT_PROBLEM = "Report problem";
+const PROBLEM_PROMPT = "What went wrong? Please don't paste document content.";
+const ISSUES_URL = "https://github.com/makesPDF/makespdf-vscode-plugin/issues";
+
+/** "Report problem" on a failed export: ask for a message, send it with fingerprints. */
+async function reportProblem(
+  context: vscode.ExtensionContext,
+  facts: RenderFailureFacts,
+) {
+  const message = await askForMessage(PROBLEM_PROMPT);
+  if (message === undefined) return;
+  await submitFeedback(context, "problem", message, buildProblemContext(facts));
+}
+
+const FEEDBACK_KINDS: (vscode.QuickPickItem & { feedbackKind: FeedbackKind; prompt: string })[] = [
+  {
+    label: "Problem",
+    description: "Something went wrong",
+    feedbackKind: "problem",
+    prompt: PROBLEM_PROMPT,
+  },
+  {
+    label: "Idea",
+    description: "Something you'd like makesPDF to do",
+    feedbackKind: "idea",
+    prompt: "What would you like? Please don't paste document content.",
+  },
+  {
+    label: "Praise",
+    description: "Something that works well",
+    feedbackKind: "praise",
+    prompt: "What's working well for you?",
+  },
+];
+
+/** The "makesPDF: Send feedback" command. Sends no `context`. */
+async function sendFeedbackCommand(context: vscode.ExtensionContext) {
+  const picked = await vscode.window.showQuickPick(FEEDBACK_KINDS, {
+    title: "makesPDF: Send feedback",
+    placeHolder: "What kind of feedback?",
+  });
+  if (!picked) return;
+  const message = await askForMessage(picked.prompt);
+  if (message === undefined) return;
+  await submitFeedback(context, picked.feedbackKind, message);
+}
+
+function askForMessage(prompt: string): Thenable<string | undefined> {
+  return vscode.window.showInputBox({
+    title: "makesPDF feedback",
+    prompt,
+    ignoreFocusOut: true,
+    validateInput: (value) => validateFeedbackMessage(value),
+  });
+}
+
+async function submitFeedback(
+  context: vscode.ExtensionContext,
+  kind: FeedbackKind,
+  message: string,
+  feedbackContext?: FeedbackContext,
+) {
+  const config = vscode.workspace.getConfiguration("makespdf");
+  const result = await vscode.window.withProgress(
+    { location: vscode.ProgressLocation.Notification, title: "Sending feedback..." },
+    () =>
+      sendFeedback({
+        serviceUrl: config.get<string>("serviceUrl", "https://makespdf.com"),
+        version: context.extension.packageJSON.version as string,
+        apiToken: config.get<string>("apiToken", "").trim(),
+        kind,
+        message,
+        context: feedbackContext,
+      }),
+  );
+
+  if (result.status === "sent") {
+    vscode.window.showInformationMessage("Thanks, feedback sent.");
+  } else if (result.status === "rate-limited") {
+    vscode.window.showWarningMessage("Too many feedback messages, try again later.");
+  } else {
+    const action = await vscode.window.showErrorMessage(
+      `Could not send feedback: ${result.error}. You can open a GitHub issue instead.`,
+      "Open GitHub issues",
+    );
+    if (action === "Open GitHub issues") {
+      await vscode.env.openExternal(vscode.Uri.parse(ISSUES_URL));
     }
   }
 }
 
 class AuthError extends Error {
-  constructor(message: string) {
+  readonly status: number;
+  constructor(message: string, status: number) {
     super(message);
     this.name = "AuthError";
+    this.status = status;
+  }
+}
+
+/** A non-2xx render response: the status and the body's `error` value, for feedback context. */
+class RenderError extends Error {
+  readonly status: number;
+  readonly code: unknown;
+  constructor(message: string, status: number, code: unknown) {
+    super(message);
+    this.name = "RenderError";
+    this.status = status;
+    this.code = code;
   }
 }
 

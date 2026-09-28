@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+- **Report problem from a failed export.** Every export error message now has a **Report problem** button. It asks what went wrong and sends your message to makesPDF with a few facts about the failure (HTTP status, error code, page size, font settings, document size in bytes). Your Markdown and its file name are never sent.
+- **New command: makesPDF: Send feedback.** Send a problem, an idea or praise from the Command Palette at any time.
+- Feedback works without an API key. With `makespdf.apiToken` set, it is linked to your account. If sending fails, the error links to GitHub issues instead. See the README's "Sending feedback" section for exactly what is sent.
+
 ## 0.1.1
 
 - **Local images now render.** Images referenced by a relative or absolute filesystem path — Markdown `![](./diagram.png)` or HTML image tags — are read from disk and inlined as base64 `data:` URIs before upload, so they appear in the PDF. Previously only `http(s)` images worked, because the server can't reach your filesystem. Remote URLs and existing `data:` URIs are left untouched, and image-like references inside code blocks/spans are never rewritten. If a referenced file can't be read, the reference is left as-is and a non-blocking warning lists what was skipped.

@@ -2,7 +2,7 @@
   "name": "makespdf-vscode-plugin",
   "displayName": "makesPDF — Markdown to PDF",
   "description": "Convert Markdown files to PDF using makesPDF.com. No signup required for short documents.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "publisher": "Lecstor",
   "repository": {
     "type": "git",
@@ -28,6 +28,10 @@
         "command": "makespdf.convertMarkdownToPdf",
         "title": "makesPDF from markdown",
         "icon": "$(file-pdf)"
+      },
+      {
+        "command": "makespdf.sendFeedback",
+        "title": "makesPDF: Send feedback"
       }
     ],
     "menus": {
@@ -108,6 +112,7 @@
     "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap",
     "watch": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap --watch=forever",
     "typecheck": "tsc --noEmit",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test src/*.test.ts",
     "vscode:prepublish": "npm run build",
     "login": "vsce login Lecstor",
     "package": "vsce package --no-dependencies",
