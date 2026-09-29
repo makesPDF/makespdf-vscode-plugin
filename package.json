@@ -117,6 +117,9 @@
     "login": "vsce login Lecstor",
     "package": "vsce package --no-dependencies",
     "publish": "vsce publish --no-dependencies",
+    "publish:marketplace": "vsce publish --packagePath makespdf-vscode-plugin-$npm_package_version.vsix",
+    "publish:ovsx": "ovsx publish makespdf-vscode-plugin-$npm_package_version.vsix",
+    "publish:both": "npm run package && npm run publish:marketplace && npm run publish:ovsx",
     "publish:patch": "vsce publish patch --no-dependencies",
     "publish:minor": "vsce publish minor --no-dependencies",
     "publish:major": "vsce publish major --no-dependencies"
@@ -126,6 +129,7 @@
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^3.9.1",
     "esbuild": "^0.24.0",
+    "ovsx": "^1.2.0",
     "typescript": "^5.7.2"
   }
 }

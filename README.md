@@ -19,6 +19,8 @@ Turn the Markdown file you're editing into a cleanly typeset, accessible, archiv
 
 That's it. The generated PDF is saved next to your source file and opened in your system viewer.
 
+Using a VS Code-based editor that doesn't use the Microsoft Marketplace? Cursor, Windsurf, VSCodium and other forks install the extension from [Open VSX](https://open-vsx.org/extension/Lecstor/makespdf-vscode-plugin).
+
 Documents up to 20 pages render out of the box, rate-limited to 60/hour and 200/day per IP. For longer documents and higher limits, add an API key from [makespdf.com/settings/api-keys](https://makespdf.com/settings/api-keys) to the `makespdf.apiToken` setting (Cmd/Ctrl + , → search "makespdf"). With a key configured, renders go through your account: no per-IP limit, no per-render page cap (other than the 200KB Markdown input cap), and your PDFs are persisted to `makespdf.com/settings/renders` for re-download.
 
 See [makespdf.com/pricing](https://makespdf.com/pricing) for plan details. PDFs on the Free and Hobbyist plans include a small `makespdf.com` link at the bottom of the page — paid plans remove it.
