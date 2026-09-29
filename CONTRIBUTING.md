@@ -96,7 +96,7 @@ export OVSX_PAT=$(op read "op://makesPDF/Open VS X Access Token/credential")
 npm run publish:both
 ```
 
-The older `npm run publish` and the `publish:patch` / `publish:minor` / `publish:major` variants publish **to the Marketplace only** — `vsce publish <bump> --no-dependencies` repackages, updates `package.json`, creates a git commit and tag, and uploads. For a release on both registries, use the sequence above.
+The older `npm run publish` repackages and uploads the current version **to the Marketplace only**. The `publish:patch` / `publish:minor` / `publish:major` variants do the same after bumping the version — `vsce publish <bump> --no-dependencies` updates `package.json` and creates a git commit and tag. For a release on both registries, use the sequence above.
 
 ### Installing a .vsix locally
 
