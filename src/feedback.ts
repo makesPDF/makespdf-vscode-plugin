@@ -7,6 +7,14 @@
 // server's strict schema — an unknown key, a non-integer, or an out-of-range
 // value there is a 400, which would lose the user's message.
 
+/**
+ * Client name in the `X-MakesPDF-Client` header, sent as
+ * `<kind>/<version>`. The server matches official client kinds exactly, so
+ * this is a plain kind — no `-plugin` suffix. One constant shared by the
+ * render and feedback calls so the two cannot drift.
+ */
+export const CLIENT_NAME = "vscode";
+
 export type FeedbackKind = "problem" | "idea" | "praise";
 
 /** Server-side cap on `message` (trimmed). */
@@ -110,7 +118,7 @@ export interface FeedbackRequestArgs {
 export function buildFeedbackRequest(args: FeedbackRequestArgs): { url: string; init: RequestInit } {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "X-MakesPDF-Client": `vscode-plugin/${args.version}`,
+    "X-MakesPDF-Client": `${CLIENT_NAME}/${args.version}`,
   };
   // Same rule as the render call: an empty `Bearer ` is a failed auth
   // attempt (401), not an anonymous request.

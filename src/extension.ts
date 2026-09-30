@@ -3,6 +3,7 @@ import { readFile, writeFile } from "fs/promises";
 import { basename, dirname, extname, isAbsolute, join, resolve } from "path";
 import {
   buildProblemContext,
+  CLIENT_NAME,
   sendFeedback,
   validateFeedbackMessage,
   type FeedbackContext,
@@ -89,7 +90,7 @@ async function convertMarkdownToPdf(context: vscode.ExtensionContext) {
         const version = context.extension.packageJSON.version as string;
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
-          "X-MakesPDF-Client": `vscode-plugin/${version}`,
+          "X-MakesPDF-Client": `${CLIENT_NAME}/${version}`,
         };
         if (apiToken) {
           headers.Authorization = `Bearer ${apiToken}`;
