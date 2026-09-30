@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- **Client header:** the extension now identifies itself as `vscode/<version>` in `X-MakesPDF-Client` (previously `vscode-plugin/<version>`), matching the plain client kinds the server recognises. Installed older versions are unaffected — the server keeps `vscode-plugin` as an alias.
+
 ## 0.2.0
 
 - **Report problem from a failed export.** Every export error message now has a **Report problem** button. It asks what went wrong and sends your message to makesPDF with a few facts about the failure (HTTP status, error code, page size, font settings, document size in bytes). Your Markdown and its file name are never sent.
