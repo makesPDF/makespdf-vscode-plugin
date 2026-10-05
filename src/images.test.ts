@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, open, rm, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, open, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -92,6 +92,52 @@ test("a reference to a directory is reported as unreadable, not too-large", asyn
   });
 });
 
+test("data-src is not mistaken for the img src attribute", async () => {
+  await withTempDir(async (dir) => {
+    // A lazy-loading placeholder pointing at a missing file must not stop an
+    // export whose real src is a remote URL the service can fetch.
+    const source = '<img data-src="missing.png" src="https://example.com/x.png">\n';
+    const { markdown, failures } = await inlineLocalImages(source, dir);
+    assert.deepEqual(failures, []);
+    assert.equal(markdown, source);
+  });
+});
+
+test("an img with a slash before src still embeds it", async () => {
+  await withTempDir(async (dir) => {
+    await writeFile(join(dir, "diagram.png"), PNG);
+    for (const source of [
+      '<img/src="diagram.png">\n',
+      '<img alt="x"/src="diagram.png">\n',
+    ]) {
+      const { markdown, failures } = await inlineLocalImages(source, dir);
+      assert.deepEqual(failures, [], source);
+      assert.ok(markdown.includes(PNG_DATA_URI), source);
+    }
+  });
+});
+
+test("a readable data-src target is left alone, not embedded", async () => {
+  await withTempDir(async (dir) => {
+    await writeFile(join(dir, "local.png"), PNG);
+    const source = '<img data-src="local.png" src="https://example.com/x.png">\n';
+    const { markdown, failures } = await inlineLocalImages(source, dir);
+    assert.deepEqual(failures, []);
+    assert.equal(markdown, source, "the placeholder's value is not rewritten");
+  });
+});
+
+test("failures across markdown and HTML references keep document order", async () => {
+  await withTempDir(async (dir) => {
+    const source = '<img src="html-missing.png">\n\n![md](md-missing.png)\n';
+    const { failures } = await inlineLocalImages(source, dir);
+    assert.deepEqual(failures, [
+      { src: "html-missing.png", reason: "unreadable" },
+      { src: "md-missing.png", reason: "unreadable" },
+    ]);
+  });
+});
+
 test("image-like text inside code spans and fences is left verbatim", async () => {
   await withTempDir(async (dir) => {
     await writeFile(join(dir, "diagram.png"), PNG);
@@ -108,12 +154,46 @@ test("image-like text inside code spans and fences is left verbatim", async () =
   });
 });
 
+test("document text that looks like a mask sentinel survives the round-trip", async () => {
+  await withTempDir(async (dir) => {
+    await writeFile(join(dir, "diagram.png"), PNG);
+    // NUL-delimited sentinels cannot collide with real text; a document that
+    // literally contains ` CODE0 ` must not be restored into the masked span.
+    // The second, un-masked image makes `restore` actually run.
+    const source =
+      "`![a](diagram.png)` and a literal  CODE0  token\n\n![c](diagram.png)\n";
+    const { markdown, failures } = await inlineLocalImages(source, dir);
+    assert.deepEqual(failures, []);
+    assert.equal(
+      markdown,
+      "`![a](diagram.png)` and a literal  CODE0  token\n\n" +
+        `![c](${PNG_DATA_URI})\n`,
+    );
+  });
+});
+
 test("an image over the 5MB limit is too-large and its bytes are never read", async () => {
   await withTempDir(async (dir) => {
     await sparseFile(join(dir, "big.png"), MAX_IMAGE_BYTES + 1);
     const { markdown, failures } = await inlineLocalImages("![big](big.png)\n", dir);
     assert.equal(markdown, "![big](big.png)\n");
     assert.deepEqual(failures, [{ src: "big.png", reason: "too-large" }]);
+  });
+});
+
+test("an unreadable over-5MB file is too-large, proving size is checked before reading", async () => {
+  await withTempDir(async (dir) => {
+    // `stat` sees the size and no bytes are read; a read-first implementation
+    // would hit EACCES and report `unreadable`.
+    const path = join(dir, "locked.png");
+    await sparseFile(path, MAX_IMAGE_BYTES + 1);
+    await chmod(path, 0o000);
+    try {
+      const { failures } = await inlineLocalImages("![locked](locked.png)\n", dir);
+      assert.deepEqual(failures, [{ src: "locked.png", reason: "too-large" }]);
+    } finally {
+      await chmod(path, 0o600);
+    }
   });
 });
 

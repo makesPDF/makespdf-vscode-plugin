@@ -49,8 +49,12 @@ export interface InlineResult {
 const MD_IMAGE =
   /!\[([^\]]*)\]\(\s*(<[^>]+>|[^)\s]+)((?:\s+(?:"[^"]*"|'[^']*'))?)\s*\)/g;
 // HTML <img …src="…">. Group 1 is everything up to and including `src=`,
-// group 3/4 is the quoted value (double/single).
-const HTML_IMAGE_SRC = /(<img\b[^>]*?\bsrc\s*=\s*)("([^"]*)"|'([^']*)')/gi;
+// group 3/4 is the quoted value (double/single). `[\s/]+` before `src`, not
+// a bare `\b`: a bare `\b` also matches `data-src=`, whose value the renderer
+// never uses — embedding it would leave the real src local and the image
+// dropped. Whitespace or `/` are the only separators a real attribute can
+// follow (`<img src=…>`, `<img/src=…>`).
+const HTML_IMAGE_SRC = /(<img\b[^>]*?[\s/]+src\s*=\s*)("([^"]*)"|'([^']*)')/gi;
 
 /**
  * Replace local image references in `source` with base64 `data:` URIs read
@@ -67,11 +71,18 @@ export async function inlineLocalImages(
   // inline spans (where it's literal text the user wants to see verbatim).
   const { masked, restore } = maskCode(source);
 
-  const srcs = new Set<string>();
-  for (const m of masked.matchAll(MD_IMAGE)) srcs.add(cleanSrc(m[2]));
-  for (const m of masked.matchAll(HTML_IMAGE_SRC)) {
-    srcs.add(cleanSrc(m[3] ?? m[4] ?? ""));
+  // The two syntaxes are scanned separately, then merged by position so
+  // `failures` is in document order even when Markdown and HTML references
+  // interleave.
+  const found: { index: number; src: string }[] = [];
+  for (const m of masked.matchAll(MD_IMAGE)) {
+    found.push({ index: m.index, src: cleanSrc(m[2]) });
   }
+  for (const m of masked.matchAll(HTML_IMAGE_SRC)) {
+    found.push({ index: m.index, src: cleanSrc(m[3] ?? m[4] ?? "") });
+  }
+  found.sort((a, b) => a.index - b.index);
+  const srcs = new Set(found.map((entry) => entry.src));
 
   interface Resolved {
     src: string;
