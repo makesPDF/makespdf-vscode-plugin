@@ -3,6 +3,7 @@
 ## 0.2.1
 
 - **Client header:** the extension now identifies itself as `vscode/<version>` in `X-MakesPDF-Client` (previously `vscode-plugin/<version>`), matching the plain client kinds the server recognises. Installed older versions are unaffected — the server keeps `vscode-plugin` as an alias.
+- **Export stops when a local image cannot be embedded.** If a local image is missing, unreadable, or over the 5MB per-image limit, the extension no longer sends the request or writes a PDF — a file that looks finished but is missing an image is worse than no file. It shows an error that stays until dismissed, naming each failed reference (up to ten, then a count) and its reason, so you can fix or remove it and export again.
 
 ## 0.2.0
 
@@ -12,7 +13,7 @@
 
 ## 0.1.1
 
-- **Local images now render.** Images referenced by a relative or absolute filesystem path — Markdown `![](./diagram.png)` or HTML image tags — are read from disk and inlined as base64 `data:` URIs before upload, so they appear in the PDF. Previously only `http(s)` images worked, because the server can't reach your filesystem. Remote URLs and existing `data:` URIs are left untouched, and image-like references inside code blocks/spans are never rewritten. If a referenced file can't be read, the reference is left as-is and a non-blocking warning lists what was skipped.
+- **Local images now render.** Images referenced by a relative or absolute filesystem path — Markdown `![](./diagram.png)` or HTML image tags — are read from disk and inlined as base64 `data:` URIs before upload, so they appear in the PDF. Previously only `http(s)` images worked, because the server can't reach your filesystem. Remote URLs and existing `data:` URIs are left untouched, and image-like references inside code blocks/spans are never rewritten.
 
 ## 0.0.5
 
