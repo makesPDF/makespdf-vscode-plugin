@@ -92,6 +92,22 @@ test("a reference to a directory is reported as unreadable, not too-large", asyn
   });
 });
 
+test("image-like text inside code spans and fences is left verbatim", async () => {
+  await withTempDir(async (dir) => {
+    await writeFile(join(dir, "diagram.png"), PNG);
+    const source =
+      "`![a](diagram.png)`\n\n```\n![b](diagram.png)\n```\n\n![c](diagram.png)\n";
+    const { markdown, failures } = await inlineLocalImages(source, dir);
+    assert.deepEqual(failures, []);
+    assert.equal(
+      markdown,
+      "`![a](diagram.png)`\n\n```\n![b](diagram.png)\n```\n\n" +
+        `![c](${PNG_DATA_URI})\n`,
+      "code spans and fences are restored untouched",
+    );
+  });
+});
+
 test("an image over the 5MB limit is too-large and its bytes are never read", async () => {
   await withTempDir(async (dir) => {
     await sparseFile(join(dir, "big.png"), MAX_IMAGE_BYTES + 1);
