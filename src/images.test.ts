@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, open, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, open, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -83,8 +83,9 @@ test("a missing local image is reported while readable ones still inline", async
   });
 });
 
-test("an unreadable directory reference is reported as unreadable", async () => {
+test("a reference to a directory is reported as unreadable, not too-large", async () => {
   await withTempDir(async (dir) => {
+    await mkdir(join(dir, "images.png"));
     const { markdown, failures } = await inlineLocalImages("![d](images.png)\n", dir);
     assert.equal(markdown, "![d](images.png)\n");
     assert.deepEqual(failures, [{ src: "images.png", reason: "unreadable" }]);
