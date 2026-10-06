@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
-import { readFile, writeFile } from "fs/promises";
-import { basename, dirname, extname, isAbsolute, join, resolve } from "path";
+import { writeFile } from "fs/promises";
+import { basename, dirname, join } from "path";
 import {
   buildProblemContext,
   CLIENT_NAME,
@@ -10,6 +10,7 @@ import {
   type FeedbackKind,
   type RenderFailureFacts,
 } from "./feedback";
+import { prepareExportMarkdown } from "./images";
 
 const ANON_TIP_SEEN_KEY = "makespdf.anonTipSeen";
 
@@ -71,7 +72,7 @@ async function convertMarkdownToPdf(context: vscode.ExtensionContext) {
   };
   let savedMessage = "";
   let anonymousTip: string | null = null;
-  let imageNotice: string | null = null;
+  let imageError: string | null = null;
 
   try {
     await vscode.window.withProgress(
@@ -99,17 +100,16 @@ async function convertMarkdownToPdf(context: vscode.ExtensionContext) {
         // Inline images referenced by local path so they survive the trip
         // to the server, which can only fetch http(s) URLs — it has no
         // access to the user's filesystem. Remote URLs and existing data
-        // URIs are left untouched.
-        const { markdown: markdownToSend, failures } = await inlineLocalImages(
+        // URIs are left untouched. If any local image cannot be embedded,
+        // stop before the POST: a PDF that silently lacks an image is worse
+        // than no PDF.
+        const { markdown: markdownToSend, error } = await prepareExportMarkdown(
           markdown,
           dirname(mdFilename),
         );
-        if (failures.length) {
-          const head = failures.slice(0, 3).join(", ");
-          imageNotice =
-            `Could not read ${failures.length} local image` +
-            `${failures.length === 1 ? "" : "s"}: ${head}` +
-            `${failures.length > 3 ? "…" : ""}. They were left as-is.`;
+        if (error) {
+          imageError = error;
+          return;
         }
 
         const response = await fetch(url, {
@@ -197,10 +197,11 @@ async function convertMarkdownToPdf(context: vscode.ExtensionContext) {
       },
     );
 
-    // Warn about any local images we couldn't read (non-blocking — the PDF
-    // still rendered, those references just won't show an image).
-    if (imageNotice) {
-      vscode.window.showWarningMessage(imageNotice);
+    // The export stopped before the request: show the error modally so it
+    // cannot auto-hide before it is read, then leave without a saved toast.
+    if (imageError) {
+      await vscode.window.showErrorMessage(imageError, { modal: true });
+      return;
     }
 
     // Show actions outside withProgress so the spinner dismisses immediately
@@ -403,137 +404,3 @@ async function readErrorTip(response: Response): Promise<ErrorDetail> {
   }
 }
 
-const IMAGE_MIME_BY_EXT: Record<string, string> = {
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".gif": "image/gif",
-  ".webp": "image/webp",
-  ".svg": "image/svg+xml",
-  ".bmp": "image/bmp",
-  ".avif": "image/avif",
-  ".ico": "image/x-icon",
-  ".tif": "image/tiff",
-  ".tiff": "image/tiff",
-  ".apng": "image/apng",
-};
-
-// Markdown image: ![alt](src "optional title"). Group 2 is the src (possibly
-// wrapped in <…>); group 3 is the optional title with its leading whitespace.
-const MD_IMAGE =
-  /!\[([^\]]*)\]\(\s*(<[^>]+>|[^)\s]+)((?:\s+(?:"[^"]*"|'[^']*'))?)\s*\)/g;
-// HTML <img …src="…">. Group 1 is everything up to and including `src=`,
-// group 3/4 is the quoted value (double/single).
-const HTML_IMAGE_SRC = /(<img\b[^>]*?\bsrc\s*=\s*)("([^"]*)"|'([^']*)')/gi;
-
-interface InlineResult {
-  markdown: string;
-  failures: string[];
-}
-
-/**
- * Replace local image references in `source` with base64 `data:` URIs read
- * from disk, resolving relative paths against `baseDir`. Remote URLs (http,
- * https, data, file, protocol-relative), unknown extensions, and references
- * inside code blocks/spans are left untouched. Unreadable paths are reported
- * in `failures` and left as-is.
- */
-async function inlineLocalImages(
-  source: string,
-  baseDir: string,
-): Promise<InlineResult> {
-  // Protect code so we never rewrite image-like text inside fenced blocks or
-  // inline spans (where it's literal text the user wants to see verbatim).
-  const { masked, restore } = maskCode(source);
-
-  const srcs = new Set<string>();
-  for (const m of masked.matchAll(MD_IMAGE)) srcs.add(cleanSrc(m[2]));
-  for (const m of masked.matchAll(HTML_IMAGE_SRC)) {
-    srcs.add(cleanSrc(m[3] ?? m[4] ?? ""));
-  }
-
-  const dataUris = new Map<string, string>();
-  const failures: string[] = [];
-  await Promise.all(
-    [...srcs].map(async (src) => {
-      if (!isInlinableLocalSrc(src)) return;
-      const mime = IMAGE_MIME_BY_EXT[extname(src).toLowerCase()];
-      if (!mime) return; // not a recognised image extension — leave untouched
-      try {
-        const bytes = await readFile(toFsPath(src, baseDir));
-        dataUris.set(src, `data:${mime};base64,${bytes.toString("base64")}`);
-      } catch {
-        failures.push(src);
-      }
-    }),
-  );
-
-  if (dataUris.size === 0) return { markdown: source, failures };
-
-  let out = masked.replace(MD_IMAGE, (whole, alt, url, title) => {
-    const uri = dataUris.get(cleanSrc(url));
-    return uri ? `![${alt}](${uri}${title ?? ""})` : whole;
-  });
-  out = out.replace(HTML_IMAGE_SRC, (whole, prefix, _quoted, dq, sq) => {
-    const uri = dataUris.get(cleanSrc(dq ?? sq ?? ""));
-    if (!uri) return whole;
-    const quote = dq !== undefined ? '"' : "'";
-    return `${prefix}${quote}${uri}${quote}`;
-  });
-
-  return { markdown: restore(out), failures };
-}
-
-/** Strip surrounding <…> angle brackets and whitespace from a src token. */
-function cleanSrc(raw: string): string {
-  const s = raw.trim();
-  return s.startsWith("<") && s.endsWith(">") ? s.slice(1, -1).trim() : s;
-}
-
-/**
- * Whether a src is a local path we should inline. Skips anything with a URL
- * scheme of two or more characters (http:, https:, data:, file:) so that
- * Windows drive paths like `C:\img.png` are still treated as local, plus
- * protocol-relative (`//host/x`) and fragment-only refs.
- */
-function isInlinableLocalSrc(src: string): boolean {
-  if (!src) return false;
-  if (/^[a-z][a-z0-9+.-]+:/i.test(src)) return false;
-  if (src.startsWith("//") || src.startsWith("#")) return false;
-  return true;
-}
-
-/** Resolve a (possibly percent-encoded) src to an absolute filesystem path. */
-function toFsPath(src: string, baseDir: string): string {
-  let p = src;
-  try {
-    p = decodeURIComponent(src);
-  } catch {
-    /* malformed escapes — fall back to the raw string */
-  }
-  return isAbsolute(p) ? p : resolve(baseDir, p);
-}
-
-/**
- * Replace fenced code blocks and inline code spans with sentinel tokens so the
- * image scan never touches them, returning a `restore` to swap them back in.
- */
-function maskCode(input: string): {
-  masked: string;
-  restore: (s: string) => string;
-} {
-  const stash: string[] = [];
-  const keep = (m: string) => {
-    const token = ` CODE${stash.length} `;
-    stash.push(m);
-    return token;
-  };
-  const masked = input
-    .replace(/```[\s\S]*?```/g, keep)
-    .replace(/~~~[\s\S]*?~~~/g, keep)
-    .replace(/``[^`]*``/g, keep)
-    .replace(/`[^`\n]*`/g, keep);
-  const restore = (s: string) =>
-    s.replace(/ CODE(\d+) /g, (_t, i) => stash[Number(i)]);
-  return { masked, restore };
-}
