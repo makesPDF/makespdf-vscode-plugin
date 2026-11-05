@@ -44,10 +44,15 @@ export interface InlineResult {
   failures: ImageFailure[];
 }
 
-// Markdown image: ![alt](src "optional title"). Group 2 is the src (possibly
-// wrapped in <…>); group 3 is the optional title with its leading whitespace.
+// Markdown image: ![alt](src "optional title"). Group 3 is the optional title
+// with its leading whitespace. Group 2 is the src, one of:
+//   - angle brackets, with `<` and `>` escaped inside: `<my (1).png>`
+//   - bare, with balanced or backslash-escaped parentheses: `a(b).png`, `a\(b.png`
+//   - bare, up to the first `)`, for an unbalanced `(`: `a(b.png`
+// The balanced form is an unrolled loop because nesting the quantifiers
+// backtracks exponentially on an unterminated `![a](xxxx`.
 const MD_IMAGE =
-  /!\[([^\]]*)\]\(\s*(<[^>]+>|[^)\s]+)((?:\s+(?:"[^"]*"|'[^']*'))?)\s*\)/g;
+  /!\[([^\]]*)\]\(\s*(<(?:\\.|[^<>\n\\])*>|(?=[^\s)])[^\s()\\]*(?:(?:\\.|\([^\s()\\]*(?:\\.[^\s()\\]*)*\))[^\s()\\]*)*|[^)\s]+)((?:\s+(?:"[^"]*"|'[^']*'))?)\s*\)/g;
 // HTML <img …src="…">. Group 1 is everything up to and including `src=`,
 // group 3/4 is the quoted value (double/single). `[\s/]+` before `src`, not
 // a bare `\b`: a bare `\b` also matches `data-src=`, whose value the renderer
@@ -76,7 +81,7 @@ export async function inlineLocalImages(
   // interleave.
   const found: { index: number; src: string }[] = [];
   for (const m of masked.matchAll(MD_IMAGE)) {
-    found.push({ index: m.index, src: cleanSrc(m[2]) });
+    found.push({ index: m.index, src: cleanMarkdownSrc(m[2]) });
   }
   for (const m of masked.matchAll(HTML_IMAGE_SRC)) {
     found.push({ index: m.index, src: cleanSrc(m[3] ?? m[4] ?? "") });
@@ -126,7 +131,7 @@ export async function inlineLocalImages(
   if (dataUris.size === 0) return { markdown: source, failures };
 
   let out = masked.replace(MD_IMAGE, (whole, alt, url, title) => {
-    const uri = dataUris.get(cleanSrc(url));
+    const uri = dataUris.get(cleanMarkdownSrc(url));
     return uri ? `![${alt}](${uri}${title ?? ""})` : whole;
   });
   out = out.replace(HTML_IMAGE_SRC, (whole, prefix, _quoted, dq, sq) => {
@@ -191,6 +196,15 @@ export async function prepareExportMarkdown(
 function cleanSrc(raw: string): string {
   const s = raw.trim();
   return s.startsWith("<") && s.endsWith(">") ? s.slice(1, -1).trim() : s;
+}
+
+/**
+ * The src of a markdown image: `cleanSrc`, then undo the escapes markdown
+ * allows in a destination. HTML attributes have no such escapes, so `<img>`
+ * srcs stay on `cleanSrc`.
+ */
+function cleanMarkdownSrc(raw: string): string {
+  return cleanSrc(raw).replace(/\\([()<>])/g, "$1");
 }
 
 /**

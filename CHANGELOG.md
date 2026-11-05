@@ -4,6 +4,7 @@
 
 - **Client header:** the extension now identifies itself as `vscode/<version>` in `X-MakesPDF-Client` (previously `vscode-plugin/<version>`), matching the plain client kinds the server recognises. Installed older versions are unaffected — the server keeps `vscode-plugin` as an alias.
 - **Export stops when a local image cannot be embedded.** If a local image is missing, unreadable, or over the 5MB per-image limit, the extension no longer sends the request or writes a PDF — a file that looks finished but is missing an image is worse than no file. It shows an error that stays until dismissed, naming each failed reference (up to ten, then a count) and its reason, so you can fix or remove it and export again.
+- **Image paths with parentheses now embed.** `![x](a(b).png)`, `![x](a\(b\).png)` and `![x](c%20(d).png)` were sent to the server unembedded, so the image was missing from the PDF with no error. They now embed, and a missing file with such a path stops the export like any other.
 
 ## 0.2.0
 
