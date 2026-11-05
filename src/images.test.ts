@@ -83,6 +83,128 @@ test("a missing local image is reported while readable ones still inline", async
   });
 });
 
+test("paths with parentheses embed in every destination form", async () => {
+  await withTempDir(async (dir) => {
+    for (const name of ["a(b).png", "c (d).png", "u(v.png", "x>y.png"]) {
+      await writeFile(join(dir, name), PNG);
+    }
+    const cases = [
+      "![x](a(b).png)",
+      "![x](a\\(b\\).png)",
+      "![x](<a(b).png>)",
+      "![x](<c (d).png>)",
+      "![x](c%20(d).png)",
+      "![x](u(v.png)",
+      "![x](<x\\>y.png>)",
+    ];
+    for (const md of cases) {
+      const { markdown, failures } = await inlineLocalImages(md, dir);
+      assert.equal(markdown, `![x](${PNG_DATA_URI})`, md);
+      assert.deepEqual(failures, [], md);
+    }
+  });
+});
+
+test("nested parentheses and an unescaped < embed", async () => {
+  await withTempDir(async (dir) => {
+    for (const name of ["a((b)).png", "a(b(c)d).png", "a<b c.png"]) {
+      await writeFile(join(dir, name), PNG);
+    }
+    for (const md of ["![x](a((b)).png)", "![x](a(b(c)d).png)", "![x](<a<b c.png>)"]) {
+      const { markdown, failures } = await inlineLocalImages(md, dir);
+      assert.equal(markdown, `![x](${PNG_DATA_URI})`, md);
+      assert.deepEqual(failures, [], md);
+    }
+  });
+});
+
+test("a backslash before a parenthesis in angle brackets stays in the path", async () => {
+  await withTempDir(async (dir) => {
+    await writeFile(join(dir, "pics\\(1).png"), PNG);
+    const { markdown, failures } = await inlineLocalImages("![x](<pics\\(1).png>)", dir);
+    assert.equal(markdown, `![x](${PNG_DATA_URI})`);
+    assert.deepEqual(failures, []);
+  });
+});
+
+test("a backslash before a space does not make a path", async () => {
+  await withTempDir(async (dir) => {
+    await writeFile(join(dir, "my photo.png"), PNG);
+    const md = "![x](my\\ photo.png)";
+    const { markdown, failures } = await inlineLocalImages(md, dir);
+    assert.equal(markdown, md);
+    assert.deepEqual(failures, []);
+  });
+});
+
+test("a title is not read as part of a path holding a backslash", async () => {
+  await withTempDir(async (dir) => {
+    const { failures } = await inlineLocalImages('![x](a\\.png "t")', dir);
+    assert.deepEqual(failures, [{ src: "a\\.png", reason: "unreadable" }]);
+  });
+});
+
+test("a title survives after a path with parentheses", async () => {
+  await withTempDir(async (dir) => {
+    await writeFile(join(dir, "a(b).png"), PNG);
+    const { markdown } = await inlineLocalImages('![x](a(b).png "the (title)")', dir);
+    assert.equal(markdown, `![x](${PNG_DATA_URI} "the (title)")`);
+  });
+});
+
+test("text after a closed image is not taken for its path", async () => {
+  await withTempDir(async (dir) => {
+    await writeFile(join(dir, "plain.png"), PNG);
+    const { markdown } = await inlineLocalImages("![x](plain.png) (see above)", dir);
+    assert.equal(markdown, `![x](${PNG_DATA_URI}) (see above)`);
+  });
+});
+
+test("a missing image with parentheses in its path stops the export", async () => {
+  await withTempDir(async (dir) => {
+    const { error } = await prepareExportMarkdown("![x](missing(1).png)", dir);
+    assert.match(error ?? "", /missing\(1\)\.png \(could not be read\)/);
+  });
+});
+
+test("an img src is not treated as a markdown destination", async () => {
+  await withTempDir(async (dir) => {
+    const { failures } = await inlineLocalImages('<img src="a\\(b\\).png">', dir);
+    assert.deepEqual(failures, [{ src: "a\\(b\\).png", reason: "unreadable" }]);
+  });
+});
+
+test("an unterminated destination does not stall", async () => {
+  await withTempDir(async (dir) => {
+    for (const tail of ["(a)".repeat(50_000), "((a)".repeat(50_000), "\\(".repeat(50_000), " ".repeat(160_000)]) {
+      const md = `![x](${tail}`;
+      const started = Date.now();
+      const { markdown } = await inlineLocalImages(md, dir);
+      assert.equal(markdown, md);
+      assert.ok(Date.now() - started < 2000, `took ${Date.now() - started}ms`);
+    }
+  });
+});
+
+test("an empty destination is left alone", async () => {
+  await withTempDir(async (dir) => {
+    const { markdown, failures } = await inlineLocalImages("![x]() ![y]( )", dir);
+    assert.equal(markdown, "![x]() ![y]( )");
+    assert.deepEqual(failures, []);
+  });
+});
+
+test("a multi-megabyte data URI is left untouched", async () => {
+  await withTempDir(async (dir) => {
+    const data = `data:image/png;base64,${"A".repeat(16_000_000)}`;
+    for (const md of [`![x](${data})`, `![x](<${data}>)`]) {
+      const { markdown, failures } = await inlineLocalImages(md, dir);
+      assert.equal(markdown, md);
+      assert.deepEqual(failures, []);
+    }
+  });
+});
+
 test("a reference to a directory is reported as unreadable, not too-large", async () => {
   await withTempDir(async (dir) => {
     await mkdir(join(dir, "images.png"));
