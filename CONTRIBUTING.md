@@ -43,60 +43,50 @@ npm test           # Unit tests (node --test; needs Node 22.18+ for built-in Typ
 
 ## Publishing
 
-The extension is published under the **Lecstor** publisher to two registries, with the same extension ID (`Lecstor.makespdf-vscode-plugin`) on both:
+The extension is published under the **Lecstor** publisher with the extension ID `Lecstor.makespdf-vscode-plugin`:
 
-- the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Lecstor.makespdf-vscode-plugin), which VS Code itself uses;
-- [Open VSX](https://open-vsx.org/extension/Lecstor/makespdf-vscode-plugin), which VS Code-based editors that don't use the Microsoft Marketplace — Cursor, Windsurf, VSCodium and others — install from.
-
-Publishing is a local, manual step — there is no CI publish workflow. A release packages one `.vsix` and publishes that same file to both registries.
+- the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Lecstor.makespdf-vscode-plugin), which VS Code itself uses. GitHub Actions publishes each release there.
+- [Open VSX](https://open-vsx.org/extension/Lecstor/makespdf-vscode-plugin), which VS Code-based editors that don't use the Microsoft Marketplace (Cursor, Windsurf, VSCodium and others) install from. The extension is not on Open VSX yet. Publishing there is a manual step, described below.
 
 ### One-time setup: VS Code Marketplace
 
-1. Make sure you have publish rights on the Lecstor publisher at https://marketplace.visualstudio.com/manage.
-2. Create a Personal Access Token (PAT) in Azure DevOps:
-   - Go to https://dev.azure.com → User Settings → Personal Access Tokens.
-   - Create a token with **Marketplace > Manage** scope.
-   - Set the organization to **All accessible organizations**.
-3. Log in (vsce is installed as a devDependency, so no global install needed):
+[`.github/workflows/publish.yml`](.github/workflows/publish.yml) publishes with [Marketplace Trusted Publishing](https://code.visualstudio.com/docs/extensions/publish-extension): the job's GitHub OIDC token is exchanged for a Marketplace credential that lasts 15 minutes, so no Personal Access Token is stored anywhere. Azure DevOps retires global Personal Access Tokens on 1 December 2026, and the old `vsce login` flow stops working on that date.
+
+The workflow needs one policy on the publisher:
+
+1. Open https://marketplace.visualstudio.com/manage, select the **Lecstor** publisher, then **Trusted Publishing**.
+2. Create a policy with repository owner `makesPDF`, repository `makespdf-vscode-plugin`, workflow `publish.yml`, and an empty environment.
+
+### Publishing a release
+
+1. On a branch, bump the version and open a PR into `main`:
    ```bash
-   npm run login
-   # Paste your PAT when prompted
+   npm version patch --no-git-tag-version   # or: minor / major
+   ```
+   This updates `package.json` and `package-lock.json`. Merge the PR.
+2. Tag the merge commit and push the tag:
+   ```bash
+   git fetch origin
+   git tag v<version> origin/main
+   git push origin v<version>
    ```
 
-### One-time setup: Open VSX
+The tag push runs the **Publish** workflow. It fails without publishing if the tag does not match the `package.json` version. Otherwise it runs the typecheck and tests, packages the `.vsix` (the `vscode:prepublish` hook runs the build), publishes it with `vsce publish --oidc`, and uploads the same `.vsix` as the run's `vsix` artifact.
+
+### Open VSX (manual)
+
+One-time setup:
 
 1. Create an [Eclipse Foundation account](https://accounts.eclipse.org) and set your GitHub username on it — Open VSX uses Eclipse accounts, and namespace ownership is granted through the linked GitHub account.
 2. Sign in at https://open-vsx.org with that account and sign the Publisher Agreement.
 3. Claim the **`Lecstor`** namespace at https://open-vsx.org/user-settings/namespaces. It must match `"publisher"` in `package.json`.
 4. Create an access token at https://open-vsx.org/user-settings/tokens and save it in 1Password: **makesPDF** vault, item **"Open VS X Access Token"**, in the item's `credential` field. Publishing reads it with the [1Password CLI](https://developer.1password.com/docs/cli/) (`op`) — the token is never written to a file or script.
 
-### Publishing a release
-
-The `vscode:prepublish` hook runs `npm run build` automatically before packaging, so you don't need to build manually.
+To publish a release, download the `vsix` artifact from that release's Publish run, put `makespdf-vscode-plugin-<version>.vsix` in the repo root, and run:
 
 ```bash
-# 1. Bump the version (updates package.json, creates a git commit and tag)
-npm version patch   # or: npm version minor / npm version major
-
-# 2. Package once
-npm run package
-
-# 3. Publish that same .vsix to both registries
-npm run publish:marketplace
 OVSX_PAT=$(op read "op://makesPDF/Open VS X Access Token/credential") npm run publish:ovsx
-
-# 4. Push the version commit and tag so the repo matches the registries
-git push origin main --follow-tags
 ```
-
-`npm run publish:both` does steps 2 and 3 in one command: `npm run package` once, then the same `makespdf-vscode-plugin-<version>.vsix` to both registries. Export the Open VSX token first so the chained commands can read it:
-
-```bash
-export OVSX_PAT=$(op read "op://makesPDF/Open VS X Access Token/credential")
-npm run publish:both
-```
-
-The older `npm run publish` repackages and uploads the current version **to the Marketplace only**. The `publish:patch` / `publish:minor` / `publish:major` variants do the same after bumping the version — `vsce publish <bump> --no-dependencies` updates `package.json` and creates a git commit and tag. For a release on both registries, use the sequence above.
 
 ### Installing a .vsix locally
 
