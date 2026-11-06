@@ -80,12 +80,12 @@ One-time setup:
 1. Create an [Eclipse Foundation account](https://accounts.eclipse.org) and set your GitHub username on it — Open VSX uses Eclipse accounts, and namespace ownership is granted through the linked GitHub account.
 2. Sign in at https://open-vsx.org with that account and sign the Publisher Agreement.
 3. Claim the **`Lecstor`** namespace at https://open-vsx.org/user-settings/namespaces. It must match `"publisher"` in `package.json`.
-4. Create an access token at https://open-vsx.org/user-settings/tokens and save it in 1Password: **makesPDF** vault, item **"Open VS X Access Token"**, in the item's `credential` field. Publishing reads it with the [1Password CLI](https://developer.1password.com/docs/cli/) (`op`) — the token is never written to a file or script.
+4. Create an access token at https://open-vsx.org/user-settings/tokens and save it in 1Password: **makesPDF** vault, item **"Open VSX Access Token"**, in the item's `credential` field. Publishing reads it with the [1Password CLI](https://developer.1password.com/docs/cli/) (`op`) — the token is never written to a file or script.
 
 To publish a release, download the `vsix` artifact from that release's Publish run, put `makespdf-vscode-plugin-<version>.vsix` in the repo root, and run:
 
 ```bash
-OVSX_PAT=$(op read "op://makesPDF/Open VS X Access Token/credential") npm run publish:ovsx
+OVSX_PAT=$(op read "op://makesPDF/Open VSX Access Token/credential") npm run publish:ovsx
 ```
 
 ### Installing a .vsix locally
