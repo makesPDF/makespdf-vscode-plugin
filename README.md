@@ -60,7 +60,7 @@ Your Markdown, its file name and its path are never sent with feedback. The serv
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, build commands, and publishing instructions.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, build commands and tests.
 
 ## License
 
