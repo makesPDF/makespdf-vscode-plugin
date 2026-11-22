@@ -1,7 +1,7 @@
 {
   "name": "makespdf-vscode-plugin",
   "displayName": "makesPDF — Markdown to PDF",
-  "description": "Convert Markdown files to PDF using makesPDF.com. No signup required for short documents.",
+  "description": "Export Markdown to accessible, archival PDFs (PDF/A-2A + PDF/UA-1) with Mermaid diagrams and syntax highlighting. No signup needed for short docs.",
   "version": "0.2.1",
   "publisher": "Lecstor",
   "repository": {
@@ -14,11 +14,23 @@
   "homepage": "https://github.com/makesPDF/makespdf-vscode-plugin#readme",
   "license": "MIT",
   "icon": "images/logo-icon.png",
+  "galleryBanner": {
+    "color": "#f4f6f8",
+    "theme": "light"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
+    "Formatters",
     "Other"
+  ],
+  "keywords": [
+    "markdown",
+    "pdf",
+    "mermaid",
+    "export",
+    "accessibility"
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",

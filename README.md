@@ -1,16 +1,20 @@
 # makesPDF — Markdown to PDF for VS Code
 
-Turn the Markdown file you're editing into a cleanly typeset, accessible, archive-grade PDF with one command. Rendering runs on [makesPDF.com](https://makespdf.com) — no Chromium, no LaTeX, no local toolchain.
+Export any Markdown file to a cleanly typeset, accessible, archive-grade PDF with one command. Rendering runs on [makesPDF.com](https://makespdf.com?ref=vscode) — no headless Chromium, no LaTeX, and no local toolchain to maintain.
+
+![Two real PDFs exported from Markdown with makesPDF: an incident postmortem with a GFM table, Mermaid sequence diagram, and warning alert on the left, and a project status report with a Mermaid Gantt chart and pie chart on the right](images/markdown-pdf-examples.png)
+
+*Real PDFs rendered straight from Markdown by makesPDF: GFM tables, native vector Mermaid diagrams, alerts, and embedded fonts.*
 
 ## Why makesPDF?
 
-- **GitHub-Flavored Markdown in, styled PDF out.** Tables, fenced code blocks with syntax highlighting, task lists, nested lists, Mermaid diagrams, embedded images — all handled.
-- **Nothing to install locally.** No headless browser, no native binaries, no font wrangling. If you have the extension and an internet connection, you can generate PDFs.
-- **Millisecond renders.** A deterministic DSL pipeline renders a typical Markdown document in ~100ms — no AI in the hot path.
-- **PDF/A-2A + PDF/UA-1 compliant.** Dual-compliant archival and accessible PDFs by default: full structure tree, embedded fonts, Unicode-correct text extraction. Safe for regulated industries, long-term storage, and screen readers.
-- **Consistent output everywhere.** Same Markdown → same PDF on macOS, Windows, Linux, or CI. Bundled fonts (Inter, NotoSans) and a deterministic layout engine mean no more "works on my machine" PDFs.
-- **Configurable page layout.** A3, A4, A5, Letter, Legal; per-side margins in points; font size 6–24pt.
-- **API-first, so it grows with you.** The same service also powers invoices, quotes, CVs, and statements via a REST API designed for automation and AI agents. Bring your own AI (Claude, Cursor, ChatGPT, or any MCP-capable agent) to author templates once and render them on demand. See [makespdf.com/docs](https://makespdf.com/docs).
+- **GitHub Flavored Markdown in, typeset PDF out.** Tables, syntax-highlighted fenced code blocks, task lists, nested lists, GFM alerts, footnotes, inline images, Mermaid diagrams (20 diagram types rendered as native vector graphics), Graphviz DOT / declarative graphs, colour emoji, and CJK / Hebrew fallback scripts.
+- **Nothing to install locally.** No headless browser, no native binaries, no font wrangling. Open a `.md` file and export.
+- **About a second, end to end.** A deterministic layout engine renders typical documents in about a second without headless-browser cold-start penalties or AI in the render path.
+- **PDF/A-2A + PDF/UA-1 compliant by default.** Every output ships with a tagged structure tree (headings, tables, lists, figure alt text), embedded subset fonts, and an sRGB ICC profile — checked against veraPDF 1.28.2 on every release via our fixture suite.
+- **Identical output across machines.** Same Markdown produces the same PDF on macOS, Windows, Linux, and CI with bundled fonts (Inter, Noto Sans, Cousine).
+- **Configurable layout and YAML frontmatter.** Choose A3, A4, A5, Letter, or Legal, margins in points, font family, and font size (6–24pt) in VS Code settings or per-file YAML frontmatter.
+- **Grows into automation and AI agents.** The same service powers high-volume templates (invoices, quotes, reports, statements) over a REST API, CLI, and hosted MCP server. See [makespdf.com/docs](https://makespdf.com/docs?ref=vscode).
 
 ## Getting started
 
